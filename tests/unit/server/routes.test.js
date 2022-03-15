@@ -1,7 +1,10 @@
-import { jest, expect, describe, test, beforeEach } from "@jest/globals";
+import { beforeEach, describe, expect, jest, test } from "@jest/globals";
 import config from "../../../server/config.js";
+import { Controller } from "../../../server/controller.js";
+import { handler } from "../../../server/routes.js";
+import TestUtil from "../_util/testUtil.js";
 
-const { pages } = config;
+const { pages, location, constants } = config;
 
 describe("#Routes - test site for api response", () => {
   beforeEach(() => {
@@ -9,14 +12,155 @@ describe("#Routes - test site for api response", () => {
     jest.clearAllMocks();
   });
 
-  test.todo("GET / - should redirect to home page");
-  test.todo(`GET /home - should response with ${pages.homeHTML} file stream`);
-  test.todo(`GET /controller - should response with ${pages.controllerHTML} file stream`);
-  test.todo("GET /file.ext - should response with file stream");
-  test.todo("GET /unknown - given as inexistent route it should response with 404");
+  test("GET / - should redirect to home page", async () => {
+    const params = TestUtil.defaultHandleParams();
+    params.request.method = "GET";
+    params.request.url = "/";
+
+    await handler(...params.values());
+
+    expect(params.response.writeHead).toBeCalledWith(302, {
+      "Location": location.home,
+    });
+    expect(params.response.end).toHaveBeenCalled();
+  });
+
+  test(`GET /home - should response with ${pages.homeHTML} file stream`, async () => {
+    const params = TestUtil.defaultHandleParams();
+    params.request.method = "GET";
+    params.request.url = "/home";
+
+    const mockFileStream = TestUtil.generateReadableStream(["data"]);
+
+    jest.spyOn(
+      Controller.prototype,
+      Controller.prototype.getFileStream.name,
+    ).mockResolvedValue({
+      stream: mockFileStream,
+    })
+
+    jest.spyOn(mockFileStream, "pipe").mockReturnValue();
+
+    await handler(...params.values());
+
+    expect(Controller.prototype.getFileStream).toBeCalledWith(pages.homeHTML);
+    expect(mockFileStream.pipe).toHaveBeenCalledWith(params.response);
+  });
+
+  test(`GET /controller - should response with ${pages.controllerHTML} file stream`, async () => {
+    const params = TestUtil.defaultHandleParams();
+    params.request.method = "GET";
+    params.request.url = "/controller";
+
+    const mockFileStream = TestUtil.generateReadableStream(["data"]);
+
+    jest.spyOn(
+      Controller.prototype,
+      Controller.prototype.getFileStream.name,
+    ).mockResolvedValue({
+      stream: mockFileStream,
+    })
+
+    jest.spyOn(mockFileStream, "pipe").mockReturnValue();
+
+    await handler(...params.values());
+
+    expect(Controller.prototype.getFileStream).toBeCalledWith(pages.controllerHTML);
+    expect(mockFileStream.pipe).toHaveBeenCalledWith(params.response);
+  });
+
+  test("GET /index.html - should response with file stream", async () => {
+    const params = TestUtil.defaultHandleParams();
+    params.request.method = "GET";
+    params.request.url = "/index.html";
+
+    const mockFileStream = TestUtil.generateReadableStream(["data"]);
+
+    jest.spyOn(
+      Controller.prototype,
+      Controller.prototype.getFileStream.name,
+    ).mockResolvedValue({
+      stream: mockFileStream,
+      type: ".html"
+    })
+
+    jest.spyOn(mockFileStream, "pipe").mockReturnValue();
+
+    await handler(...params.values());
+
+    expect(Controller.prototype.getFileStream).toBeCalledWith("/index.html");
+    expect(mockFileStream.pipe).toHaveBeenCalledWith(params.response);
+    expect(params.response.writeHead).toHaveBeenCalledWith(200, {
+      "Content-Type": constants.CONTENT_TYPE[".html"],
+    });
+  });
+
+  test("GET /file.ext - should response with file stream", async () => {
+    const params = TestUtil.defaultHandleParams();
+    params.request.method = "GET";
+    params.request.url = "/file.ext";
+
+    const mockFileStream = TestUtil.generateReadableStream(["data"]);
+
+    jest.spyOn(
+      Controller.prototype,
+      Controller.prototype.getFileStream.name,
+    ).mockResolvedValue({
+      stream: mockFileStream,
+      type: ".ext"
+    })
+
+    jest.spyOn(mockFileStream, "pipe").mockReturnValue();
+
+    await handler(...params.values());
+
+    expect(Controller.prototype.getFileStream).toBeCalledWith("/file.ext");
+    expect(mockFileStream.pipe).toHaveBeenCalledWith(params.response);
+    expect(params.response.writeHead).not.toHaveBeenCalled();
+  });
+
+  test("GET /unknown - given as inexistent route it should response with 404", async () => {
+    const params = TestUtil.defaultHandleParams();
+    params.request.method = "POST";
+    params.request.url = "/unknown";
+
+    await handler(...params.values());
+
+    expect(params.response.writeHead).toHaveBeenCalledWith(404);
+    expect(params.response.end).toHaveBeenCalled();
+  });
 
   describe("exceptions", () => {
-    test.todo("given inexistent file it should respond with 404");
-    test.todo("given as error it should respond with 500");
+    test("given inexistent file it should respond with 404", async () => {
+      const params = TestUtil.defaultHandleParams();
+      params.request.method = "GET";
+      params.request.url = "/index.png";
+
+      jest.spyOn(
+        Controller.prototype,
+        Controller.prototype.getFileStream.name
+      ).mockRejectedValue(new Error("Error: ENOENT: no such file or directory"));
+
+      await handler(...params.values());
+
+      expect(params.response.writeHead).toHaveBeenCalledWith(404);
+      expect(params.response.end).toHaveBeenCalled();
+    });
+
+    test("given as error it should respond with 500", async () => {
+      const params = TestUtil.defaultHandleParams();
+      params.request.method = "GET";
+      params.request.url = "/index.png";
+
+      jest.spyOn(
+        Controller.prototype,
+        Controller.prototype.getFileStream.name
+      ).mockRejectedValue(new Error("Error:"));
+
+      await handler(...params.values());
+
+      expect(params.response.writeHead).toHaveBeenCalledWith(500);
+      expect(params.response.end).toHaveBeenCalled();
+    });
   });
 });

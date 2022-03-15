@@ -119,7 +119,7 @@ describe("#Routes - test site for api response", () => {
     expect(params.response.writeHead).not.toHaveBeenCalled();
   });
 
-  test("GET /unknown - given as inexistent route it should response with 404", async () => {
+  test("POST /unknown - given as inexistent route it should response with 404", async () => {
     const params = TestUtil.defaultHandleParams();
     params.request.method = "POST";
     params.request.url = "/unknown";

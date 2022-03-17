@@ -1,0 +1,29 @@
+sox \
+  --i \
+  "audio/songs/conversation.mp3"
+
+// Para converter novos audios para o mesmo bit rate
+sox \
+  -v 0.99 \
+  -t mp3 \
+  "filepath" \
+  -r 48000 \
+  -t mp3 \
+  "output.mp3"
+
+// para obter o bit rate
+sox \
+  --i \
+  -B \
+  "filepath"
+
+// concatenar dois audios
+sox \
+  -t mp3 \
+  -v 0.99 \
+  -m "audio/songs/conversation.mp3" \
+  -t mp3 \
+  -v 0.99 \
+  "audio/fx/Fart - Gaming Sound Effect (HD) (128 kbps).mp3" \
+  -t mp3 \
+  "output.mp3"

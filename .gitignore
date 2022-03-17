@@ -1,7 +1,12 @@
 # Folder's
 node_modules
+coverage
 
 # Files
 package-lock.json
 yarn.lock
 .env
+
+# Others
+controller.test.js
+service.test.js

@@ -16,5 +16,38 @@ services:
     ports:
       - 3333:3333
 
+  test:
+    image: beecast
+    build: .
+    command:
+      - npm
+      - run
+      - test
+    volumes:
+      - .:/beecast
+      - node_modules:/beecast/node_modules
+
+  test-watch:
+    image: beecast
+    build: .
+    command:
+      - npm
+      - run
+      - test:watch
+    volumes:
+      - .:/beecast
+      - node_modules:/beecast/node_modules
+
+  test-coverage:
+    image: beecast
+    build: .
+    command:
+      - npm
+      - run
+      - test:coverage
+    volumes:
+      - .:/beecast
+      - node_modules:/beecast/node_modules
+
 volumes:
   node_modules: {}

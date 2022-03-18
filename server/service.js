@@ -19,7 +19,7 @@ export class Service {
     this.throttleTransform = {};
     this.currentReadable = {};
 
-    this.startStream()
+    // this.startStream()
   }
 
   createClientStream() {
@@ -100,6 +100,10 @@ export class Service {
       throttleTransform,
       this.broadCast()
     );
+  }
+
+  async stopStream() {
+    this.throttleTransform?.end?.();
   }
 
   createFileStream(filename) {

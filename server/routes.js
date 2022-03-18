@@ -32,6 +32,19 @@ async function routes(request, response) {
     return stream.pipe(response);
   }
 
+  if (method === "GET" && url.includes("/stream")) {
+    const { stream, onClose } = controller.createClientStream()
+
+    request.once("close", onClose);
+    response.writeHead(200, {
+      "Content-Type": "application/mpeg",
+      "Accept-Rages": "bytes"
+    });
+
+    return stream.pipe(response);
+  }
+
+  // Files
   if (method === "GET") {
     const { stream, type } = await controller.getFileStream(url);
 
